@@ -25,17 +25,14 @@ class _NationalTeamFixtureScreenState extends State<NationalTeamFixtureScreen> {
   Future<void> _loadNationalTeamData() async {
     try {
       final dio = _service.getDio();
-      final now = DateTime.now();
 
-      // 1. ADIM: Ülke ismiyle o ülkenin milli takımının ID'sini buluyoruz
+      // 1. ADIM: Milli Takım ID'sini bul
       final teamRes = await dio.get(
         '/teams',
         queryParameters: {'country': widget.countryName},
       );
 
       final List teams = teamRes.data['response'];
-
-      // Listeden 'national: true' olan tek takımı (Milli Takım) ayıklıyoruz
       final nationalTeam = teams.firstWhere(
         (t) => t['team']['national'] == true,
         orElse: () => null,
@@ -47,29 +44,34 @@ class _NationalTeamFixtureScreenState extends State<NationalTeamFixtureScreen> {
           teamName = nationalTeam['team']['name'];
         });
 
-        // 2. ADIM: Bulduğumuz ID ile 2026 sezonu fikstürünü çekiyoruz
-        final fixtureRes = await dio.get(
+        // 2. ADIM: 2025 veya 2024 sezonundaki TÜM maçları çek
+        // Tarih filtresi (now) artık kullanılmıyor.
+        var fixtureRes = await dio.get(
           '/fixtures',
           queryParameters: {'team': teamId, 'season': '2025'},
         );
 
         List allFixtures = fixtureRes.data['response'];
 
-        // 3. ADIM: Filtreleme - Sadece bugünden sonraki maçlar
-        final futureFixtures = allFixtures.where((f) {
-          DateTime matchDate = DateTime.parse(f['fixture']['date']);
-          return matchDate.isAfter(now);
-        }).toList();
+        // Eğer 2025 boşsa 2024'ü dene (Garantici yaklaşım)
+        if (allFixtures.isEmpty) {
+          fixtureRes = await dio.get(
+            '/fixtures',
+            queryParameters: {'team': teamId, 'season': '2024'},
+          );
+          allFixtures = fixtureRes.data['response'];
+        }
 
-        // Tarihe göre sıralama
-        futureFixtures.sort(
+        // 3. ADIM: Filtreleme YAPMIYORUZ.
+        // Sadece gelen veriyi tarihe göre sıralıyoruz (Eskiden yeniye)
+        allFixtures.sort(
           (a, b) => DateTime.parse(
             a['fixture']['date'],
           ).compareTo(DateTime.parse(b['fixture']['date'])),
         );
 
         setState(() {
-          fixtures = futureFixtures;
+          fixtures = allFixtures; // Gelen her şeyi listeye bastık
           isLoading = false;
         });
       } else {
@@ -78,7 +80,7 @@ class _NationalTeamFixtureScreenState extends State<NationalTeamFixtureScreen> {
         });
       }
     } catch (e) {
-      print("Milli takım verisi yüklenirken hata: $e");
+      print("Hata: $e");
       setState(() {
         isLoading = false;
       });
@@ -92,18 +94,7 @@ class _NationalTeamFixtureScreenState extends State<NationalTeamFixtureScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : fixtures.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.event_busy, size: 50, color: Colors.grey),
-                  const SizedBox(height: 10),
-                  Text(
-                    "${widget.countryName} için 2026'da planlanmış maç yok.",
-                  ),
-                ],
-              ),
-            )
+          ? const Center(child: Text("Veri bulunamadı."))
           : ListView.builder(
               padding: const EdgeInsets.all(10),
               itemCount: fixtures.length,
@@ -112,91 +103,38 @@ class _NationalTeamFixtureScreenState extends State<NationalTeamFixtureScreen> {
                 final homeTeam = f['teams']['home'];
                 final awayTeam = f['teams']['away'];
                 final date = DateTime.parse(f['fixture']['date']).toLocal();
+                final status =
+                    f['fixture']['status']['short']; // Maçın durumu (FT, NS vb.)
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(12),
+                    leading: Image.network(homeTeam['logo'], width: 40),
+                    title: Text(
+                      "${homeTeam['name']} - ${awayTeam['name']}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    subtitle: Column(
                       children: [
-                        // Ev Sahibi
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Image.network(
-                                homeTeam['logo'],
-                                width: 45,
-                                height: 45,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                homeTeam['name'],
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: 5),
+                        Text(
+                          "${date.day}.${date.month}.${date.year} - ${date.hour}:${date.minute.toString().padLeft(2, '0')}",
                         ),
-
-                        // Skor / VS Alanı
-                        Column(
-                          children: [
-                            Text(
-                              "${date.day}.${date.month}.${date.year}",
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 4),
-                              child: Text(
-                                "VS",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueAccent,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              "${date.hour}:${date.minute.toString().padLeft(2, '0')}",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Deplasman
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Image.network(
-                                awayTeam['logo'],
-                                width: 45,
-                                height: 45,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                awayTeam['name'],
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                        Text(
+                          "Durum: $status",
+                          style: const TextStyle(color: Colors.blueAccent),
                         ),
                       ],
                     ),
+                    trailing: Image.network(awayTeam['logo'], width: 40),
                   ),
                 );
               },
