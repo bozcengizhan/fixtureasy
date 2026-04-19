@@ -28,7 +28,7 @@ class FootballHomeScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment:
-              CrossAxisAlignment.start, // Başlığı sola yaslamak için
+              CrossAxisAlignment.center, // Başlığı sola yaslamak için
           children: [
             // ÜST BUTONLAR (Ülke ve Ligler)
             Row(
@@ -52,7 +52,6 @@ class FootballHomeScreen extends StatelessWidget {
             // BÖLÜM BAŞLIĞI
             const Text(
               "SON BAKILAN TAKIMLAR",
-              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
