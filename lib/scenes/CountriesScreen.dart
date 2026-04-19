@@ -1,7 +1,7 @@
-import 'package:fixtureasy/scenes/NationalTeamFixtureScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // SVG desteği için
+import 'package:flutter_svg/flutter_svg.dart';
 import '../services/football_service.dart';
+import 'SelectionScreen.dart'; // Yeni eklediğimiz yönlendirme sayfası
 
 class CountriesScreen extends StatefulWidget {
   const CountriesScreen({super.key});
@@ -38,7 +38,9 @@ class _CountriesScreenState extends State<CountriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Milli Takım Seçin")),
+      appBar: AppBar(
+        title: const Text("Ülke Seçin"),
+      ), // Başlığı genel bir isim yaptık
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -67,8 +69,8 @@ class _CountriesScreenState extends State<CountriesScreen> {
                   title: Text(country['name']),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    // Tıklanan ülkenin ismini bir sonraki sayfaya gönderiyoruz
-                    _goToNationalTeamFixture(context, country['name']);
+                    // ARTIK BURASI SELECTION SCREEN'E GİDİYOR
+                    _goToSelection(context, country['name']);
                   },
                 );
               },
@@ -76,12 +78,12 @@ class _CountriesScreenState extends State<CountriesScreen> {
     );
   }
 
-  void _goToNationalTeamFixture(BuildContext context, String countryName) {
+  // Fonksiyonun ismini ve hedefini değiştirdik
+  void _goToSelection(BuildContext context, String countryName) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            NationalTeamFixtureScreen(countryName: countryName),
+        builder: (context) => SelectionScreen(countryName: countryName),
       ),
     );
   }

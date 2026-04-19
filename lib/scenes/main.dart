@@ -12,7 +12,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(), // Taslağına uygun koyu tema
+      theme: ThemeData.dark(),
       home: const FootballHomeScreen(),
     );
   }
@@ -28,16 +28,17 @@ class FootballHomeScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.center, // Başlığı sola yaslamak için
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // ÜST BUTONLAR (Ülke ve Ligler)
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMenuButton(context, "ÜLKELER", Icons.flag),
-                ),
-              ],
+            // ÜST BUTON (Sadece ÜLKELER)
+            // Center içine alarak tek butonu ortaladık
+            Center(
+              child: SizedBox(
+                width:
+                    MediaQuery.of(context).size.width *
+                    0.8, // Ekranın %80'i kadar genişlik
+                child: _buildMenuButton(context, "ÜLKELER", Icons.public),
+              ),
             ),
 
             const SizedBox(height: 30),
@@ -54,29 +55,24 @@ class FootballHomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 15),
 
-            // LİSTE (Artık tam genişlikte ve dikey akıyor)
+            // LİSTE
             Expanded(
               child: ListView.builder(
                 itemCount: 5,
-                physics: const BouncingScrollPhysics(), // Daha yumuşak kaydırma
+                physics: const BouncingScrollPhysics(),
                 itemBuilder: (context, index) {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     height: 70,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(
-                        0.05,
-                      ), // Hafif bir dolgu rengi
+                      color: Colors.white.withOpacity(0.05),
                       border: Border.all(color: Colors.white12),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: ListTile(
                       leading: const CircleAvatar(
                         backgroundColor: Colors.white10,
-                        child: Icon(
-                          Icons.shield,
-                          color: Colors.white54,
-                        ), // Takım logosu yerine geçici icon
+                        child: Icon(Icons.shield, color: Colors.white54),
                       ),
                       title: Text("Takım Adı ${index + 1}"),
                       trailing: const Icon(
@@ -84,9 +80,7 @@ class FootballHomeScreen extends StatelessWidget {
                         size: 14,
                         color: Colors.white24,
                       ),
-                      onTap: () {
-                        // Takıma tıklanınca ne olacağını buraya yazacağız
-                      },
+                      onTap: () {},
                     ),
                   );
                 },
@@ -98,12 +92,12 @@ class FootballHomeScreen extends StatelessWidget {
     );
   }
 
-  // Menü butonu widget'ı aynı kalabilir
   Widget _buildMenuButton(BuildContext context, String title, IconData icon) {
     return InkWell(
-      // Tıklanma efekti ekledik
       onTap: () {
-        if (title == "ÜLKE TAKIMLARI") {
+        // BURASI ÖNEMLİ: title ne gelirse gelsin CountriesScreen'e gitsin
+        // veya 'ÜLKELER' olarak kontrol edelim
+        if (title == "ÜLKELER") {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const CountriesScreen()),
@@ -114,17 +108,20 @@ class FootballHomeScreen extends StatelessWidget {
       child: Container(
         height: 100,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.white, width: 2),
+          border: Border.all(
+            color: Colors.blueAccent,
+            width: 2,
+          ), // Daha belirgin yaptık
           borderRadius: BorderRadius.circular(25),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 30),
-            const SizedBox(height: 5),
+            Icon(icon, size: 30, color: Colors.blueAccent),
+            const SizedBox(height: 8),
             Text(
               title,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ],
         ),
