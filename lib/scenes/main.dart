@@ -1,4 +1,4 @@
-import 'package:fixtureasy/scenes/CountriesScreen.dart';
+import 'package:fixtureasy/scenes/LeaguesScreen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -87,7 +87,7 @@ class FootballHomeScreen extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CountriesScreen()),
+          MaterialPageRoute(builder: (context) => const LeaguesScreen()),
         );
       },
       borderRadius: BorderRadius.circular(25),
@@ -115,7 +115,7 @@ class FootballHomeScreen extends StatelessWidget {
             Icon(Icons.public, size: 40, color: Colors.blueAccent),
             SizedBox(width: 20),
             Text(
-              "TÜM ÜLKELER VE LİGLER",
+              "TÜM LİGLERİ KEŞFET",
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -145,19 +145,20 @@ class FootballHomeScreen extends StatelessWidget {
             color: Colors.white10,
             borderRadius: BorderRadius.circular(12),
           ),
+          // İleride buraya Image.network(teamBadgeUrl) gelecek
           child: const Icon(Icons.shield, color: Colors.blueAccent, size: 28),
         ),
         title: Text(
-          "Favori Takım ${index + 1}",
+          "Takım ${index + 1}", // Örn: Galatasaray, Real Madrid
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
         subtitle: const Text(
-          "TheSportsDB Data",
+          "Lig Bilgisi", // Örn: Trendyol Süper Lig
           style: TextStyle(fontSize: 12, color: Colors.white38),
         ),
         trailing: const Icon(Icons.chevron_right, color: Colors.white24),
         onTap: () {
-          // Takım detayına gidiş ileride eklenecek
+          // Burası ileride TeamDetailScreen'e gidecek
         },
       ),
     );

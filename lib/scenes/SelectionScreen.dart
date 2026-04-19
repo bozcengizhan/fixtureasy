@@ -1,145 +1,144 @@
+import 'package:fixtureasy/scenes/LeagueFixtureScreen%20.dart';
 import 'package:flutter/material.dart';
-import '../services/football_service.dart';
-import 'NationalTeamFixtureScreen.dart';
-import 'LeagueFixtureScreen.dart';
+// Dosya ismindeki boşluğu temizledik, projedeki dosya adıyla tam eşleşmeli
+import 'LeagueFixtureScreen .dart';
 
-class SelectionScreen extends StatefulWidget {
-  final String countryName;
-  const SelectionScreen({super.key, required this.countryName});
+class SelectionScreen extends StatelessWidget {
+  final int leagueId;
+  final String leagueName;
 
-  @override
-  State<SelectionScreen> createState() => _SelectionScreenState();
-}
-
-class _SelectionScreenState extends State<SelectionScreen> {
-  final FootballService _service = FootballService();
-  List leagues = [];
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchLeagues();
-  }
-
-  Future<void> _fetchLeagues() async {
-    try {
-      // Seçilen ülkeye ait tüm ligleri çekiyoruz
-      final response = await _service.getDio().get(
-        '/leagues',
-        queryParameters: {'country': widget.countryName},
-      );
-
-      setState(() {
-        leagues = response.data['response'];
-        isLoading = false;
-      });
-    } catch (e) {
-      print("Ligler yüklenirken hata: $e");
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
+  const SelectionScreen({
+    super.key,
+    required this.leagueId,
+    required this.leagueName,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.countryName), centerTitle: true),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              children: [
-                // --- 1. MİLLİ TAKIM BÖLÜMÜ ---
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(
-                    "ULUSAL TAKIM",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 5,
-                  ),
-                  color: Colors.blueAccent.withOpacity(0.1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Colors.blueAccent,
-                      child: Icon(Icons.star, color: Colors.white),
-                    ),
-                    title: Text("${widget.countryName} Milli Takımı"),
-                    subtitle: const Text("Fikstür ve maç detayları"),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => NationalTeamFixtureScreen(
-                            countryName: widget.countryName,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // --- 2. YEREL LİGLER BÖLÜMÜ ---
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(
-                    "YEREL LİGLER",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                // Ligler listesini mapleyerek ekliyoruz
-                ...leagues.map((item) {
-                  final league = item['league'];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    child: ListTile(
-                      leading: Image.network(
-                        league['logo'],
-                        width: 35,
-                        errorBuilder: (c, e, s) =>
-                            const Icon(Icons.emoji_events),
-                      ),
-                      title: Text(league['name']),
-                      trailing: const Icon(Icons.chevron_right, size: 18),
-                      onTap: () {
-                        // Lig fikstür sayfasına yönlendirme (League ID ile)
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => LeagueFixtureScreen(
-                              leagueId: league['id'],
-                              leagueName: league['name'],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                }).toList(),
-              ],
+      appBar: AppBar(
+        title: Text(leagueName),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent, // Daha modern bir görünüm için
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Lig İkonu ve Başlık
+            const Icon(Icons.emoji_events, size: 80, color: Colors.amber),
+            const SizedBox(height: 15),
+            Text(
+              leagueName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
             ),
+            const SizedBox(height: 40),
+
+            // SEÇENEK 1: FİKSTÜR VE SONUÇLAR
+            _buildOptionCard(
+              title: "Fikstür ve Sonuçlar",
+              subtitle: "Maç sonuçları ve gelecek program",
+              icon: Icons.calendar_month,
+              color: Colors.blueAccent,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LeagueFixtureScreen(
+                      leagueId: leagueId,
+                      leagueName: leagueName,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            // SEÇENEK 2: PUAN DURUMU
+            _buildOptionCard(
+              title: "Puan Durumu",
+              subtitle: "Lig sıralaması ve detaylı tablo",
+              icon: Icons.format_list_numbered,
+              color: Colors.orangeAccent,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Puan durumu yakında eklenecek!"),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Ortak Tasarım Kartı - Parametrelerden BuildContext'i kaldırdık çünkü StatelessWidget içinde gerek yok
+  Widget _buildOptionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(icon, color: color, size: 30),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.white24,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

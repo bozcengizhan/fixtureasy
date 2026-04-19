@@ -1,14 +1,14 @@
 class TheSportsEvent {
   final String idEvent;
-  final String strEvent; // Örn: "Arsenal vs Chelsea"
+  final String strEvent;
   final String strHomeTeam;
   final String strAwayTeam;
   final String? intHomeScore;
   final String? intAwayScore;
-  final String dateEvent; // Örn: "2026-04-19"
+  final String dateEvent;
   final String? strTime;
-  final String? strThumb; // Maçın görseli (varsa)
-  final String? strStatus; // Maçın durumu
+  final String? strThumb;
+  final String? strStatus;
 
   TheSportsEvent({
     required this.idEvent,
@@ -23,13 +23,14 @@ class TheSportsEvent {
     this.strStatus,
   });
 
+  // JSON verisini Flutter nesnesine dönüştüren fabrika metodumuz
   factory TheSportsEvent.fromJson(Map<String, dynamic> json) {
     return TheSportsEvent(
       idEvent: json['idEvent'] ?? '',
       strEvent: json['strEvent'] ?? '',
       strHomeTeam: json['strHomeTeam'] ?? 'Bilinmiyor',
       strAwayTeam: json['strAwayTeam'] ?? 'Bilinmiyor',
-      intHomeScore: json['intHomeScore'], // Null gelebilir (oynanmamış maç)
+      intHomeScore: json['intHomeScore'],
       intAwayScore: json['intAwayScore'],
       dateEvent: json['dateEvent'] ?? '',
       strTime: json['strTime'],
