@@ -28,4 +28,6 @@ class FootballService {
       return [];
     }
   }
+
+  Dio getDio() => _dio;
 }

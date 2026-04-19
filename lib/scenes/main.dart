@@ -1,3 +1,4 @@
+import 'package:fixtureasy/scenes/CountriesScreen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -109,7 +110,14 @@ class FootballHomeScreen extends StatelessWidget {
   Widget _buildMenuButton(BuildContext context, String title, IconData icon) {
     return InkWell(
       // Tıklanma efekti ekledik
-      onTap: () => print("$title tıklandı"),
+      onTap: () {
+        if (title == "ÜLKE TAKIMLARI") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CountriesScreen()),
+          );
+        }
+      },
       borderRadius: BorderRadius.circular(25),
       child: Container(
         height: 100,
