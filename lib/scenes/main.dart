@@ -24,65 +24,54 @@ class FootballHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('FixturEasy'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text(
+          'FixturEasy',
+          style: TextStyle(letterSpacing: 1.5, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Başlıklar için sola yasladık
           children: [
-            // ÜST BUTON (Sadece ÜLKELER)
-            // Center içine alarak tek butonu ortaladık
-            Center(
-              child: SizedBox(
-                width:
-                    MediaQuery.of(context).size.width *
-                    0.8, // Ekranın %80'i kadar genişlik
-                child: _buildMenuButton(context, "ÜLKELER", Icons.public),
-              ),
-            ),
+            const SizedBox(height: 10),
 
-            const SizedBox(height: 30),
+            // ANA NAVİGASYON KARTI
+            _buildMainNavigationCard(context),
+
+            const SizedBox(height: 40),
 
             // BÖLÜM BAŞLIĞI
-            const Text(
-              "SON BAKILAN TAKIMLAR",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-                letterSpacing: 1.2,
-              ),
+            const Row(
+              children: [
+                Icon(Icons.history, size: 20, color: Colors.grey),
+                SizedBox(width: 10),
+                Text(
+                  "SON BAKILAN TAKIMLAR",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 15),
 
-            // LİSTE
+            // TAKIM LİSTESİ (TheSportsDB ile entegre edilecek alan)
             Expanded(
               child: ListView.builder(
-                itemCount: 5,
+                itemCount:
+                    3, // Şimdilik statik, ileride Local DB veya API'den gelecek
                 physics: const BouncingScrollPhysics(),
                 itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      border: Border.all(color: Colors.white12),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: Colors.white10,
-                        child: Icon(Icons.shield, color: Colors.white54),
-                      ),
-                      title: Text("Takım Adı ${index + 1}"),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: Colors.white24,
-                      ),
-                      onTap: () {},
-                    ),
-                  );
+                  return _buildRecentTeamCard(index);
                 },
               ),
             ),
@@ -92,39 +81,84 @@ class FootballHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuButton(BuildContext context, String title, IconData icon) {
+  // Üstteki Büyük Buton Yapısı
+  Widget _buildMainNavigationCard(BuildContext context) {
     return InkWell(
       onTap: () {
-        // BURASI ÖNEMLİ: title ne gelirse gelsin CountriesScreen'e gitsin
-        // veya 'ÜLKELER' olarak kontrol edelim
-        if (title == "ÜLKELER") {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CountriesScreen()),
-          );
-        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CountriesScreen()),
+        );
       },
       borderRadius: BorderRadius.circular(25),
       child: Container(
-        height: 100,
+        width: double.infinity,
+        height: 120,
         decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.blueAccent.withOpacity(0.2),
+              Colors.blueAccent.withOpacity(0.05),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           border: Border.all(
-            color: Colors.blueAccent,
-            width: 2,
-          ), // Daha belirgin yaptık
+            color: Colors.blueAccent.withOpacity(0.5),
+            width: 1.5,
+          ),
           borderRadius: BorderRadius.circular(25),
         ),
-        child: Column(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 30, color: Colors.blueAccent),
-            const SizedBox(height: 8),
+            Icon(Icons.public, size: 40, color: Colors.blueAccent),
+            SizedBox(width: 20),
             Text(
-              title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              "TÜM ÜLKELER VE LİGLER",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.1,
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Takım Kartı Tasarımı
+  Widget _buildRecentTeamCard(int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        border: Border.all(color: Colors.white12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white10,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(Icons.shield, color: Colors.blueAccent, size: 28),
+        ),
+        title: Text(
+          "Favori Takım ${index + 1}",
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        subtitle: const Text(
+          "TheSportsDB Data",
+          style: TextStyle(fontSize: 12, color: Colors.white38),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+        onTap: () {
+          // Takım detayına gidiş ileride eklenecek
+        },
       ),
     );
   }

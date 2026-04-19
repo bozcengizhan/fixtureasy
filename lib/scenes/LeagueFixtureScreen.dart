@@ -30,60 +30,78 @@ class _LeagueFixtureScreenState extends State<LeagueFixtureScreen> {
   Future<void> _fetchSmartFixtures() async {
     try {
       final dio = _service.getDio();
-      final now = DateTime.now();
 
-      // 1. ADIM: Gelecek 15 maçı çekmeyi dene (Hangi sezon olduğundan bağımsız en garantisi budur)
-      var response = await dio.get(
-        '/fixtures',
-        queryParameters: {'league': widget.leagueId, 'next': 15},
+      print(
+        "--- SORGULANIYOR: ${widget.leagueName} (ID: ${widget.leagueId}) ---",
       );
 
-      List data = response.data['response'];
+      // 1. ADIM: Mevcut Sezonu (2025) Dene
+      // Not: Nisan 2026'da olduğumuz için Avrupa liglerinin aktif sezonu 2025'tir.
+      var response = await dio.get(
+        'fixtures',
+        queryParameters: {'league': widget.leagueId, 'season': 2025},
+      );
 
-      // 2. ADIM: Eğer gelecek maç yoksa, 2025 (mevcut) sezonunu çek
+      List data = response.data['response'] ?? [];
+
+      // 2. ADIM: Eğer 2025 tamamen boşsa (Yeni başlamış bir lig olabilir), 2026'yı dene
       if (data.isEmpty) {
+        print("2025 boş çıktı, 2026 sezonu deneniyor...");
         response = await dio.get(
-          '/fixtures',
-          queryParameters: {'league': widget.leagueId, 'season': '2025'},
+          'fixtures',
+          queryParameters: {'league': widget.leagueId, 'season': 2026},
         );
-        data = response.data['response'];
+        data = response.data['response'] ?? [];
       }
 
-      // 3. ADIM: O da boşsa 2024'e bak (Arşiv)
+      // 3. ADIM: Hala boşsa 2024 (Arşiv) verisine bak
       if (data.isEmpty) {
+        print("2026 da boş çıktı, son çare 2024 deneniyor...");
         response = await dio.get(
-          '/fixtures',
-          queryParameters: {'league': widget.leagueId, 'season': '2024'},
+          'fixtures',
+          queryParameters: {'league': widget.leagueId, 'season': 2024},
         );
-        data = response.data['response'];
+        data = response.data['response'] ?? [];
       }
 
-      // Veriyi model listesine çevir
-      List<Fixture> allFixtures = data
-          .map((json) => Fixture.fromJson(json))
-          .toList();
+      print("TOPLAM VERİ: ${data.length}");
 
-      // SIRALAMA MANTIĞI:
-      // Gelecek maçları (NS) en yakından uzağa,
-      // Biten maçları (FT) en yeniden eskiye sıralar.
-      allFixtures.sort((a, b) {
-        if (a.status == "NS" && b.status == "NS") {
-          return a.date.compareTo(b.date); // Yakın tarihli gelecek maç üstte
-        } else if (a.status == "FT" && b.status == "FT") {
-          return b.date.compareTo(a.date); // Yeni bitmiş maç üstte
+      if (data.isNotEmpty) {
+        try {
+          List<Fixture> allFixtures = data
+              .map((json) => Fixture.fromJson(json))
+              .toList();
+
+          // --- AKILLI SIRALAMA ---
+          // Gelecek maçları (NS) en üste, geçmiş maçları (FT) altına dizer.
+          // Gelecek maçlar kendi içinde en yakın tarihten uzağa sıralanır.
+          allFixtures.sort((a, b) {
+            if (a.status == "NS" && b.status == "NS") {
+              return a.date.compareTo(b.date); // Yakındaki gelecek maç en üstte
+            } else if (a.status == "FT" && b.status == "FT") {
+              return b.date.compareTo(a.date); // Yeni bitmiş maç üstte
+            }
+            return (a.status == "NS") ? -1 : 1; // NS durumundakileri öne al
+          });
+
+          setState(() {
+            fixtures = allFixtures;
+            isLoading = false;
+          });
+        } catch (e) {
+          print("MODEL DÖNÜŞTÜRME HATASI: $e");
+          setState(() => isLoading = false);
         }
-        return (a.status == "NS") ? -1 : 1; // Gelecek maçlar her zaman üstte
-      });
-
-      setState(() {
-        fixtures = allFixtures;
-        isLoading = false;
-      });
+      } else {
+        print("HİÇBİR SEZONDA VERİ BULUNAMADI.");
+        setState(() {
+          fixtures = [];
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      print("HATA: $e");
-      setState(() {
-        isLoading = false;
-      });
+      print("SORGULAMA HATASI: $e");
+      setState(() => isLoading = false);
     }
   }
 

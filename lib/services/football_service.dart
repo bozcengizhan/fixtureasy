@@ -1,46 +1,39 @@
 import 'package:dio/dio.dart';
-import '../models/fixture_model.dart';
 
-class FootballService {
+class TheSportsDBService {
   final Dio _dio = Dio(
     BaseOptions(
-      // 1. URL'nin sonuna / ekledik
-      baseUrl: 'https://v3.football.api-sports.io/',
-      headers: {
-        'x-apisports-key': 'e1adc0a33313eba5901205c2588669a0',
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-      },
-      // Zaman aşımı süreleri ekleyelim ki emülatör takılı kalmasın
+      baseUrl:
+          'https://www.thesportsdb.com/api/v1/json/3/', // '3' ücretsiz test keyidir
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ),
   );
 
-  // Mevcut getFixtures metodun (Ana ekranda kullanıyorsan)
-  Future<List<dynamic>> getFixtures(String date) async {
+  // Ligin son oynanan maçlarını getirir
+  Future<List<dynamic>> getLastResults(int leagueId) async {
     try {
       final response = await _dio.get(
-        'fixtures', // Başındaki / işaretini sildik çünkü baseUrl'de var
-        queryParameters: {'date': date},
+        'eventspastleague.php',
+        queryParameters: {'id': leagueId},
       );
-
-      // DEBUG: Gelen ham veriyi gör
-      print("API RAW DATA: ${response.data}");
-
-      if (response.data['errors'] != null &&
-          response.data['errors'] is Map &&
-          response.data['errors'].isNotEmpty) {
-        print("API'DEN GELEN HATA: ${response.data['errors']}");
-        return [];
-      }
-
-      if (response.statusCode == 200) {
-        List data = response.data['response'];
-        return data; // Model dönüşümünü ihtiyacına göre yaparsın
-      }
+      return response.data['events'] ?? [];
+    } catch (e) {
+      print("TheSportsDB Hatası (Past): $e");
       return [];
-    } on DioException catch (e) {
-      print("DIO HATASI: ${e.type} - ${e.message}");
+    }
+  }
+
+  // Ligin gelecek maçlarını getirir
+  Future<List<dynamic>> getNextEvents(int leagueId) async {
+    try {
+      final response = await _dio.get(
+        'eventsnextleague.php',
+        queryParameters: {'id': leagueId},
+      );
+      return response.data['events'] ?? [];
+    } catch (e) {
+      print("TheSportsDB Hatası (Next): $e");
       return [];
     }
   }

@@ -1,39 +1,40 @@
-class Team {
-  final int id;
-  final String name;
-  final String logo;
+class TheSportsEvent {
+  final String idEvent;
+  final String strEvent; // Örn: "Arsenal vs Chelsea"
+  final String strHomeTeam;
+  final String strAwayTeam;
+  final String? intHomeScore;
+  final String? intAwayScore;
+  final String dateEvent; // Örn: "2026-04-19"
+  final String? strTime;
+  final String? strThumb; // Maçın görseli (varsa)
+  final String? strStatus; // Maçın durumu
 
-  Team({required this.id, required this.name, required this.logo});
-
-  factory Team.fromJson(Map<String, dynamic> json) {
-    return Team(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? 'Bilinmeyen Takım',
-      logo: json['logo'] ?? '',
-    );
-  }
-}
-
-class Fixture {
-  final Team homeTeam;
-  final Team awayTeam;
-  final String status;
-  final DateTime date; // <--- KRİTİK EKLEME
-
-  Fixture({
-    required this.homeTeam,
-    required this.awayTeam,
-    required this.status,
-    required this.date, // <--- KRİTİK EKLEME
+  TheSportsEvent({
+    required this.idEvent,
+    required this.strEvent,
+    required this.strHomeTeam,
+    required this.strAwayTeam,
+    this.intHomeScore,
+    this.intAwayScore,
+    required this.dateEvent,
+    this.strTime,
+    this.strThumb,
+    this.strStatus,
   });
 
-  factory Fixture.fromJson(Map<String, dynamic> json) {
-    return Fixture(
-      homeTeam: Team.fromJson(json['teams']['home']),
-      awayTeam: Team.fromJson(json['teams']['away']),
-      status: json['fixture']['status']['short'],
-      // API'den gelen "2026-04-19T21:00:00+00:00" formatını DateTime'a çeviriyoruz
-      date: DateTime.parse(json['fixture']['date']),
+  factory TheSportsEvent.fromJson(Map<String, dynamic> json) {
+    return TheSportsEvent(
+      idEvent: json['idEvent'] ?? '',
+      strEvent: json['strEvent'] ?? '',
+      strHomeTeam: json['strHomeTeam'] ?? 'Bilinmiyor',
+      strAwayTeam: json['strAwayTeam'] ?? 'Bilinmiyor',
+      intHomeScore: json['intHomeScore'], // Null gelebilir (oynanmamış maç)
+      intAwayScore: json['intAwayScore'],
+      dateEvent: json['dateEvent'] ?? '',
+      strTime: json['strTime'],
+      strThumb: json['strThumb'],
+      strStatus: json['strStatus'],
     );
   }
 }
