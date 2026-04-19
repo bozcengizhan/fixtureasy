@@ -25,19 +25,15 @@ class _NationalTeamFixtureScreenState extends State<NationalTeamFixtureScreen> {
   Future<void> _loadNationalTeamData() async {
     try {
       final dio = _service.getDio();
+      final now = DateTime.now(); // Şu anki tarih (19 Nisan 2026)
 
-      // 1. Önce ülkenin milli takımının ID'sini buluyoruz
+      // 1. Ülke üzerinden takımı bul
       final teamRes = await dio.get(
         '/teams',
-        queryParameters: {
-          'name': widget.countryName,
-          'country': widget.countryName,
-        },
+        queryParameters: {'country': widget.countryName},
       );
 
-      final teams = teamRes.data['response'];
-
-      // Listeden milli takım olanı filtrele (national: true)
+      final List teams = teamRes.data['response'];
       final nationalTeam = teams.firstWhere(
         (t) => t['team']['national'] == true,
         orElse: () => null,
@@ -49,17 +45,33 @@ class _NationalTeamFixtureScreenState extends State<NationalTeamFixtureScreen> {
           teamName = nationalTeam['team']['name'];
         });
 
-        // 2. Bulduğumuz ID ile fikstürü çekiyoruz (2026 sezonu örneği)
+        // 2. 2026 sezonu maçlarını çek
         final fixtureRes = await dio.get(
           '/fixtures',
-          queryParameters: {
-            'team': teamId,
-            'next': 10, // Gelecek 10 maçı getir
-          },
+          queryParameters: {'team': teamId, 'season': '2026'},
+        );
+
+        List allFixtures = fixtureRes.data['response'];
+
+        // 3. Tarih ve Durum Filtrelemesi
+        final futureFixtures = allFixtures.where((f) {
+          // API'den gelen tarihi Dart DateTime nesnesine çeviriyoruz
+          DateTime matchDate = DateTime.parse(f['fixture']['date']);
+          String status = f['fixture']['status']['short'];
+
+          // Maç tarihi bugünden sonraysa VE henüz başlamadıysa (NS) listeye al
+          return matchDate.isAfter(now) && status == "NS";
+        }).toList();
+
+        // Maçları tarihe göre yakından uzağa sıralayalım
+        futureFixtures.sort(
+          (a, b) => DateTime.parse(
+            a['fixture']['date'],
+          ).compareTo(DateTime.parse(b['fixture']['date'])),
         );
 
         setState(() {
-          fixtures = fixtureRes.data['response'];
+          fixtures = futureFixtures;
           isLoading = false;
         });
       } else {
