@@ -35,15 +35,7 @@ class FootballHomeScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildMenuButton(
-                    context,
-                    "ÜLKE TAKIMLARI",
-                    Icons.flag,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildMenuButton(context, "LİGLER", Icons.list),
+                  child: _buildMenuButton(context, "ÜLKELER", Icons.flag),
                 ),
               ],
             ),
