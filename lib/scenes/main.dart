@@ -1,5 +1,6 @@
-import 'package:fixtureasy/scenes/LeaguesScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'countries_view.dart';
 
 void main() {
   runApp(const MainApp());
@@ -13,153 +14,125 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
-      home: const FootballHomeScreen(),
+      home: const HomeView(),
     );
   }
 }
 
-class FootballHomeScreen extends StatelessWidget {
-  const FootballHomeScreen({super.key});
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  String? lastTeamName;
+  String? lastTeamLogo;
+  int? lastTeamId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastTeam(); // Sayfa açıldığında son bakılan takımı getir
+  }
+
+  // Hafızadaki takımı getiren fonksiyon
+  Future<void> _loadLastTeam() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      lastTeamName = prefs.getString('lastTeamName');
+      lastTeamLogo = prefs.getString('lastTeamLogo');
+      lastTeamId = prefs.getInt('lastTeamId');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'FixturEasy',
-          style: TextStyle(letterSpacing: 1.5, fontWeight: FontWeight.bold),
-        ),
+        title: const Text("Futbol Fikstür"),
         centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.green[800],
+        foregroundColor: Colors.white,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start, // Başlıklar için sola yasladık
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // 1. Ülke Seçim Butonu
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CountriesView(),
+                  ),
+                ).then(
+                  (_) => _loadLastTeam(),
+                ); // Geri dönüldüğünde son takımı güncelle
+              },
+              icon: const Icon(Icons.public),
+              label: const Text("Ülke Seçimi Yap"),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                backgroundColor: Colors.green[700],
+                foregroundColor: Colors.white,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // 2. Son Bakılan Takım Bölümü
+            const Text(
+              "Son Bakılan Takım",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
 
-            // ANA NAVİGASYON KARTI
-            _buildMainNavigationCard(context),
-
-            const SizedBox(height: 40),
-
-            // BÖLÜM BAŞLIĞI
-            const Row(
-              children: [
-                Icon(Icons.history, size: 20, color: Colors.grey),
-                SizedBox(width: 10),
-                Text(
-                  "SON BAKILAN TAKIMLAR",
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-
-            // TAKIM LİSTESİ (TheSportsDB ile entegre edilecek alan)
-            Expanded(
-              child: ListView.builder(
-                itemCount:
-                    3, // Şimdilik statik, ileride Local DB veya API'den gelecek
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return _buildRecentTeamCard(index);
-                },
-              ),
-            ),
+            lastTeamId != null
+                ? _buildLastTeamCard() // Takım varsa kartı göster
+                : _buildNoDataCard(), // Takım yoksa uyarıyı göster
           ],
         ),
       ),
     );
   }
 
-  // Üstteki Büyük Buton Yapısı
-  Widget _buildMainNavigationCard(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LeaguesScreen()),
-        );
-      },
-      borderRadius: BorderRadius.circular(25),
-      child: Container(
-        width: double.infinity,
-        height: 120,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.blueAccent.withOpacity(0.2),
-              Colors.blueAccent.withOpacity(0.05),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(
-            color: Colors.blueAccent.withOpacity(0.5),
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.public, size: 40, color: Colors.blueAccent),
-            SizedBox(width: 20),
-            Text(
-              "TÜM LİGLERİ KEŞFET",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.1,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Takım Kartı Tasarımı
-  Widget _buildRecentTeamCard(int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
-        border: Border.all(color: Colors.white12),
-        borderRadius: BorderRadius.circular(20),
-      ),
+  // Son bakılan takım kartı tasarımı
+  Widget _buildLastTeamCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white10,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          // İleride buraya Image.network(teamBadgeUrl) gelecek
-          child: const Icon(Icons.shield, color: Colors.blueAccent, size: 28),
-        ),
+        leading: Image.network(lastTeamLogo!, width: 40),
         title: Text(
-          "Takım ${index + 1}", // Örn: Galatasaray, Real Madrid
-          style: const TextStyle(fontWeight: FontWeight.w500),
+          lastTeamName!,
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: const Text(
-          "Lig Bilgisi", // Örn: Trendyol Süper Lig
-          style: TextStyle(fontSize: 12, color: Colors.white38),
-        ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+        subtitle: const Text("Fikstüre gitmek için tıkla"),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
-          // Burası ileride TeamDetailScreen'e gidecek
+          // Burada direkt Fikstür sayfasına yönlendirme yapılacak
+          print("Takım ID: $lastTeamId fikstürüne gidiliyor...");
         },
+      ),
+    );
+  }
+
+  Widget _buildNoDataCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Center(
+        child: Text(
+          "Henüz bir takıma bakmadınız.",
+          style: TextStyle(color: Colors.grey),
+        ),
       ),
     );
   }
